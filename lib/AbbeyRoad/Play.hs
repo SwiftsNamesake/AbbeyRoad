@@ -1,5 +1,5 @@
 -- |
--- Module      : Southpaw.AbbeyRoad.Play
+-- Module      : AbbeyRoad.Play
 -- Description : Audio playback with OpenAL and ALUT
 -- Copyright   : (c) Jonatan H Sundqvist, 2015
 -- License     : MIT

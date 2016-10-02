@@ -79,10 +79,10 @@ numSamples secs = round (fromIntegral samplerate * secs)
 -- |
 sine :: Double -> [Sample]
 sine freq = cycle $ take n $ map sin [0, d..]
-	 where
-	   d  = 2 * pi * freq / sr
-	   n  = truncate (sr / freq)
-	   sr = fromIntegral samplerate
+  where
+    d  = 2 * pi * freq / sr
+    n  = truncate (sr / freq)
+    sr = fromIntegral samplerate
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -105,41 +105,41 @@ vecPtr = fst . VM.unsafeToForeignPtr0
 -- TODO: Rename (eg. 'record' to 'startRecording') (?)
 withCaptureDevice :: (Maybe String) -> Double -> (Device -> IO c) -> IO (Maybe c)
 withCaptureDevice specifier secs onsuccess = bracket acquire finally between
-	where
-	  format       = Mono16
-	  finally      = maybe (return False) $ \mic -> captureStop mic >> captureCloseDevice mic
-	  record mic   = captureStart mic >> return mic
-	  acquire      = captureOpenDevice specifier (fromIntegral samplerate) format (numSamples secs)
-	  between mmic = case mmic of
-	    Just mic -> record mic >> onsuccess mic >>= return . Just
-	    Nothing  -> return Nothing
+  where
+    format       = Mono16
+    finally      = maybe (return False) $ \mic -> captureStop mic >> captureCloseDevice mic
+    record mic   = captureStart mic >> return mic
+    acquire      = captureOpenDevice specifier (fromIntegral samplerate) format (numSamples secs)
+    between mmic = case mmic of
+      Just mic -> record mic >> onsuccess mic >>= return . Just
+      Nothing  -> return Nothing
 
 
 -- |
 -- TODO: Refactor
 capture :: Maybe String -> Double -> (MemoryRegion CInt -> IO c) -> IO (Maybe c) -- According to GHCi
 capture specifier duration action = withCaptureDevice specifier duration record
-	where 
-	  num        = numSamples duration
-	  record mic = do
-	    sleep $ realToFrac duration                                                          -- Sleep until we should stop recording
-	    mutableV <- V.thaw . V.fromList . map (pcm 16) . take (fromIntegral num) $ sine 220  -- 
-	    withForeignPtr (vecPtr mutableV) $ \ptr -> captureSamples mic ptr (fromIntegral num) -- 
-	    rec <- V.freeze mutableV                                                             -- 
-	    let (mem, size) = V.unsafeToForeignPtr0 rec                                          -- 
-	    withForeignPtr mem $ \ptr -> action $ MemoryRegion ptr (fromIntegral size)           -- 
+  where 
+    num        = numSamples duration
+    record mic = do
+      sleep $ realToFrac duration                                                          -- Sleep until we should stop recording
+      mutableV <- V.thaw . V.fromList . map (pcm 16) . take (fromIntegral num) $ sine 220  -- 
+      withForeignPtr (vecPtr mutableV) $ \ptr -> captureSamples mic ptr (fromIntegral num) -- 
+      rec <- V.freeze mutableV                                                             -- 
+      let (mem, size) = V.unsafeToForeignPtr0 rec                                          -- 
+      withForeignPtr mem $ \ptr -> action $ MemoryRegion ptr (fromIntegral size)           -- 
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 -- |
 checkAlErrors :: IO [String]
 checkAlErrors = do
-	errs <- get $ alErrors
-	return [ d | ALError _ d <- errs ]
+  errs <- get $ alErrors
+  return [ d | ALError _ d <- errs ]
 
 
 -- |
 checkAlcErrors :: Device -> IO [String]
 checkAlcErrors device = do
-	errs <- get $ alcErrors device
-	return [ d | ALCError _ d <- errs ]
+  errs <- get $ alcErrors device
+  return [ d | ALCError _ d <- errs ]
