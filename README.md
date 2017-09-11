@@ -12,3 +12,4 @@ TODO
 - [ ] Profiling
 - [ ] Streaming audio
 - [ ] Sample app
+- [ ] \(Type\) safety

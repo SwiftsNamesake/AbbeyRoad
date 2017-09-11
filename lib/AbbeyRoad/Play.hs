@@ -6,7 +6,7 @@
 -- Maintainer  : Jonatan H Sundqvist
 -- Stability   : experimental|stable
 -- Portability : POSIX (not sure)
--- 
+--
 
 -- Created July 29 2015
 
@@ -16,18 +16,54 @@
 -- SPEC | -
 --        -
 
-
+-- API -------------------------------------------------------------------------
 
 module AbbeyRoad.Play where
 
+-- We'll need these ------------------------------------------------------------
+
+import           Control.Monad
+
+import           Sound.ALUT
+
+import qualified Sound.OpenAL                 as AL
+import           Sound.OpenAL.AL.BasicTypes   ()
+import           Sound.OpenAL.ALC.Capture
+
+import qualified Data.Vector.Storable         as V
+import qualified Data.Vector.Storable.Mutable as VM
+
+--- Definitions ----------------------------------------------------------------
+
+-- |
+-- TODO | - Rename (?)
+data Audio = Audio {
+  device  :: _,
+  context :: _
+} deriving (Show)
 
 
---------------------------------------------------------------------------------------------------------------------------------------------
--- We'll need these
---------------------------------------------------------------------------------------------------------------------------------------------
+-- |
+initialise :: IO (Maybe Audio)
+initialise = do
+  mdevice  <- openDevice Nothing
+  mcontext <- createContext device []
+  currentContext $= Just context
+  return $ Audio <$> mdevice <*> mcontext
 
 
+loadFrom :: FilePath -> IO (Maybe _)
+loadFrom fn = _
 
---------------------------------------------------------------------------------------------------------------------------------------------
--- Functions
---------------------------------------------------------------------------------------------------------------------------------------------
+
+-- |
+play :: FilePath -> IO ()
+play fn = withProgNameAndArgs runALUTUsingCurrentContext $ \_ _ -> do
+  Just audio <- initialise
+  sound <- createBuffer $ File fn
+  [source] <- genObjectNames 1
+  queueBuffers source [sound]
+  AL.play [source]
+  sleep 4
+  closeDevice device
+  return ()

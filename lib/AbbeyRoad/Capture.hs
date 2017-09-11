@@ -6,10 +6,10 @@
 -- Maintainer  : Jonatan H Sundqvist
 -- Stability   : experimental|stable
 -- Portability : POSIX (not sure)
--- 
+--
 
 -- Created July 22 2015
--- 
+--
 -- I am forever indebted to the author of this module: https://github.com/peterhil/hs-openal-proto/blob/master/src/Sound/OpenAL/Proto/Play.hs,
 -- who saved me from having to figure out how to construct memory views by myself.
 
@@ -20,50 +20,37 @@
 -- SPEC | -
 --        -
 
-
+-- API -------------------------------------------------------------------------
 
 module AbbeyRoad.Capture where
 
+-- We'll need these ------------------------------------------------------------
 
+import           Control.Applicative
+import           Control.Exception            (bracket)
 
---------------------------------------------------------------------------------------------------------------------------------------------
--- We'll need these
---------------------------------------------------------------------------------------------------------------------------------------------
-import Control.Exception  (bracket)      --
+import           Foreign
+import           Foreign.C.Types
 
-import Foreign                   -- Import the foreigners!
-import Foreign.C.Types           -- 
+import           Sound.ALUT
 
-import Sound.ALUT                -- 
+import           Sound.OpenAL
+import           Sound.OpenAL.AL.BasicTypes   ()
+import           Sound.OpenAL.ALC.Capture
 
-import Sound.OpenAL                         -- 
-import Sound.OpenAL.AL.BasicTypes ()        -- 
-import Sound.OpenAL.ALC.Capture             -- 
+import qualified Data.Vector.Storable         as V
+import qualified Data.Vector.Storable.Mutable as VM
 
-import qualified Data.Vector.Storable as V          --
-import qualified Data.Vector.Storable.Mutable as VM --
+-- Types -----------------------------------------------------------------------
 
-
-
-
---------------------------------------------------------------------------------------------------------------------------------------------
--- Types
---------------------------------------------------------------------------------------------------------------------------------------------
 type Sample = Double
 
+-- Data ------------------------------------------------------------------------
 
-
---------------------------------------------------------------------------------------------------------------------------------------------
--- Data
---------------------------------------------------------------------------------------------------------------------------------------------
 samplerate :: Int
 samplerate = 44100 -- TODO: Don't hard-code sample rate
 
-
-
---------------------------------------------------------------------------------------------------------------------------------------------
--- Functions
---------------------------------------------------------------------------------------------------------------------------------------------
+-- Functions -------------------------------------------------------------------
 
 -- |
 bufferSize :: Storable a => Int -> a -> Double -> Int
@@ -78,7 +65,7 @@ numSamples secs = round (fromIntegral samplerate * secs)
 
 -- |
 sine :: Double -> [Sample]
-sine freq = cycle $ take n $ map sin [0, d..]
+sine freq = cycle . take n $ fmap sin [0, d..]
   where
     d  = 2 * pi * freq / sr
     n  = truncate (sr / freq)
@@ -111,7 +98,7 @@ withCaptureDevice specifier secs onsuccess = bracket acquire finally between
     record mic   = captureStart mic >> return mic
     acquire      = captureOpenDevice specifier (fromIntegral samplerate) format (numSamples secs)
     between mmic = case mmic of
-      Just mic -> record mic >> onsuccess mic >>= return . Just
+      Just mic -> Just <$> (record mic >> onsuccess mic)
       Nothing  -> return Nothing
 
 
@@ -119,15 +106,15 @@ withCaptureDevice specifier secs onsuccess = bracket acquire finally between
 -- TODO: Refactor
 capture :: Maybe String -> Double -> (MemoryRegion CInt -> IO c) -> IO (Maybe c) -- According to GHCi
 capture specifier duration action = withCaptureDevice specifier duration record
-  where 
+  where
     num        = numSamples duration
     record mic = do
       sleep $ realToFrac duration                                                          -- Sleep until we should stop recording
-      mutableV <- V.thaw . V.fromList . map (pcm 16) . take (fromIntegral num) $ sine 220  -- 
-      withForeignPtr (vecPtr mutableV) $ \ptr -> captureSamples mic ptr (fromIntegral num) -- 
-      rec <- V.freeze mutableV                                                             -- 
-      let (mem, size) = V.unsafeToForeignPtr0 rec                                          -- 
-      withForeignPtr mem $ \ptr -> action $ MemoryRegion ptr (fromIntegral size)           -- 
+      mutableV <- V.thaw . V.fromList . fmap (pcm 16) . take (fromIntegral num) $ sine 220  --
+      withForeignPtr (vecPtr mutableV) $ \ptr -> captureSamples mic ptr (fromIntegral num) --
+      rec <- V.freeze mutableV                                                             --
+      let (mem, size) = V.unsafeToForeignPtr0 rec                                          --
+      withForeignPtr mem $ \ptr -> action $ MemoryRegion ptr (fromIntegral size)           --
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
