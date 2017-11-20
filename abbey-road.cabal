@@ -10,8 +10,7 @@ author:              Jonatan Sundqvist
 maintainer:          jonatanhsundqvist@gmail.com
 copyright:           (c) Jonatan Sundqvist, 2015
 category:            <category>
-build-type:          Custom
--- extra-source-files:
+build-type:          Simple
 cabal-version:       >=1.10
 
 -- custom-setup
@@ -28,6 +27,11 @@ library
   build-depends:         base >= 4.7 && < 5
                        , vector
                        , async
+                       , safe-exceptions
+                       , either
+                       , transformers
+                       , monad-loops
+                       , microlens
                        , OpenAL
                        , ALUT
 

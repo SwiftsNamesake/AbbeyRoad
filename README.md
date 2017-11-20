@@ -13,3 +13,4 @@ TODO
 - [ ] Streaming audio
 - [ ] Sample app
 - [ ] \(Type\) safety
+- [ ] Get rid of ALUT (terrible or non-existant documentation) (?)

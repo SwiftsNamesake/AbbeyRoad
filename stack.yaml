@@ -10,5 +10,5 @@ resolver: lts-7.2
 # NOTE: The relative path issue may have been fixed
 #       (cf. https://github.com/commercialhaskell/stack/issues/2830)
 extra-lib-dirs:
-- C:/Users/Jonatan/Desktop/Haskell/modules/AbbeyRoad/dependencies/freealut/admin/VisualStudio6/alut/x64/Release
-- C:/Users/Jonatan/Desktop/Haskell/modules/AbbeyRoad/dependencies/openal-soft-1.16.0-bin/openal-soft-1.16.0-bin/libs/Win64
+- ./dependencies/freealut/admin/VisualStudio6/alut/x64/Release
+- ./dependencies/openal-soft-1.16.0-bin/openal-soft-1.16.0-bin/libs/Win64
